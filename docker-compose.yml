@@ -1,0 +1,63 @@
+version: '3'
+
+services:
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:5.5.3
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=8000
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    volumes:
+      - ./config/kibana.yml:/usr/share/kibana/config/kibana.yml
+    ports:
+      - 5601:5601
+    links:
+      - elasticsearch
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:5.5.3
+    environment:
+      - LS_JAVA_OPTS=-Xms750m -Xmx750m
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    volumes:
+      - ./config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./pipeline:/usr/share/logstash/pipeline
+      - ./shared:/var/shared
+    links:
+      - elasticsearch
+      - kibana
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.5.3
+    environment:
+      - ES_JAVA_OPTS=-Xms750m -Xmx750m
+    volumes:
+      - ./config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+
+  randomlog:
+    image: ubuntu:18.04
+    command: >-
+      bash -c "
+        rm /var/shared/randomlog.log;
+        while true; do
+          paste -d' ' -s <({
+            date -u;
+            shuf -n 1 -e ERROR DEBUG INFO INFO;
+            find / -name *.conf | shuf -n 1;
+            shuf -n 5 /usr/share/common-licenses/GPL-3;
+          }) >> /var/shared/randomlog.log;
+          sleep $${RANDOM:0:1};
+        done
+      "
+    volumes:
+      - ./shared:/var/shared
+
+volumes:
+  esdata:
+    driver: local
