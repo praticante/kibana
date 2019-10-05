@@ -15,20 +15,6 @@ services:
     links:
       - elasticsearch
 
-  logstash:
-    image: docker.elastic.co/logstash/logstash:5.5.3
-    environment:
-      - LS_JAVA_OPTS=-Xms750m -Xmx750m
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    volumes:
-      - ./config/logstash.yml:/usr/share/logstash/config/logstash.yml
-      - ./pipeline:/usr/share/logstash/pipeline
-      - ./shared:/var/shared
-    links:
-      - elasticsearch
-      - kibana
-
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:5.5.3
     environment:
@@ -57,6 +43,22 @@ services:
       "
     volumes:
       - ./shared:/var/shared
+
+  logstash_randomlog:
+      image: docker.elastic.co/logstash/logstash:5.5.3
+      environment:
+        - LS_JAVA_OPTS=-Xms750m -Xmx750m
+        - ELASTICSEARCH_URL=http://elasticsearch:9200
+        - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      volumes:
+        - ./config/logstash.yml:/usr/share/logstash/config/logstash.yml
+        - ./config/pipelines.yml:/usr/share/logstash/config/pipelines.yml
+        - ./pipeline/randomlog.conf:/usr/share/logstash/pipeline/randomlog.conf
+        - ./shared:/var/shared
+      links:
+        - elasticsearch
+        - kibana
+        - randomlog
 
 volumes:
   esdata:
