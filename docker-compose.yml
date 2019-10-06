@@ -33,7 +33,7 @@ services:
         rm /var/shared/randomlog.log;
         while true; do
           paste -d' ' -s <({
-            date -u;
+            date -uIseconds;
             shuf -n 1 -e ERROR DEBUG INFO INFO;
             find / -name *.conf | shuf -n 1;
             shuf -n 5 /usr/share/common-licenses/GPL-3;
